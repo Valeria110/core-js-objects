@@ -404,32 +404,115 @@ function group(array, keySelector, valueSelector) {
  */
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  selector: '',
+  hasId: false,
+  haspseudoElement: false,
+  hasElement: false,
+  selectorOrder: 0,
+
+  element(value) {
+    const cssSelectorObj = Object.create(this);
+    cssSelectorObj.checkForError('element');
+    cssSelectorObj.checkForSelectorsOrder(1);
+
+    cssSelectorObj.selector = `${this.selector}${value}`;
+    cssSelectorObj.hasElement = true;
+    cssSelectorObj.selectorOrder = 1;
+
+    return cssSelectorObj;
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    const cssSelectorObj = Object.create(this);
+    cssSelectorObj.checkForError('id');
+    cssSelectorObj.checkForSelectorsOrder(2);
+
+    cssSelectorObj.selector = `${this.selector}#${value}`;
+    cssSelectorObj.hasId = true;
+    cssSelectorObj.selectorOrder = 2;
+
+    return cssSelectorObj;
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    const cssSelectorObj = Object.create(this);
+    cssSelectorObj.checkForSelectorsOrder(3);
+
+    cssSelectorObj.selector = `${this.selector}.${value}`;
+    cssSelectorObj.selectorOrder = 3;
+
+    return cssSelectorObj;
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    const cssSelectorObj = Object.create(this);
+    cssSelectorObj.checkForSelectorsOrder(4);
+
+    cssSelectorObj.selector = `${this.selector}[${value}]`;
+    cssSelectorObj.selectorOrder = 4;
+
+    return cssSelectorObj;
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    const cssSelectorObj = Object.create(this);
+    cssSelectorObj.checkForSelectorsOrder(5);
+
+    cssSelectorObj.selector = `${this.selector}:${value}`;
+    cssSelectorObj.selectorOrder = 5;
+
+    return cssSelectorObj;
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    const cssSelectorObj = Object.create(this);
+    cssSelectorObj.checkForError('pseudoElement');
+    cssSelectorObj.checkForSelectorsOrder(6);
+
+    cssSelectorObj.selector = `${this.selector}::${value}`;
+    cssSelectorObj.haspseudoElement = true;
+    cssSelectorObj.selectorOrder = 6;
+
+    return cssSelectorObj;
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    this.selector = `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+    return this;
+  },
+
+  stringify() {
+    const selectorStr = this.selector;
+    this.selector = '';
+    this.hasId = false;
+    this.haspseudoElement = false;
+    return selectorStr;
+  },
+
+  checkForError(selector) {
+    if (selector === 'element' && this.hasElement) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+    if (selector === 'id' && this.hasId) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+    if (selector === 'pseudoElement' && this.haspseudoElement) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+  },
+
+  checkForSelectorsOrder(selectorPosition) {
+    if (this.selectorOrder > selectorPosition) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
   },
 };
 
